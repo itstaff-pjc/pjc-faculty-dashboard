@@ -71,6 +71,6 @@ module.exports = async function (context, req) {
     context.res = { status: 200, body: { instructors } };
   } catch (err) {
     context.log('Error in /api/instructors:', err.message);
-    context.res = { status: 500, body: { error: 'Failed to fetch instructors' } };
+    context.res = { status: 500, body: { error: 'Failed to fetch instructors', detail: err.message } };
   }
 };
