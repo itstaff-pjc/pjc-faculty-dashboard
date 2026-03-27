@@ -1,0 +1,14 @@
+{
+  "name": "blackboard-faculty-dashboard-api",
+  "version": "1.0.0",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "test": "jest --testPathPattern=tests/"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  }
+}

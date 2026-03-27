@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faculty Activity Dashboard — Paris Junior College</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header class="header">
+    <img src="PJCLogo_Stacked_FullColor_NoLocations.jpg" alt="Paris Junior College">
+    <span class="header-title">Faculty Activity Dashboard</span>
+    <span class="header-meta" id="termLabel"></span>
+    <button class="refresh-btn" id="refreshBtn" onclick="loadDashboard()">↺ Refresh</button>
+  </header>
+
+  <div class="toolbar">
+    <span class="toolbar-label">Filter:</span>
+    <button class="filter-pill on" data-filter="all"      onclick="setFilter('all')">All</button>
+    <button class="filter-pill"    data-filter="inactive" onclick="setFilter('inactive')">Inactive</button>
+    <button class="filter-pill"    data-filter="at-risk"  onclick="setFilter('at-risk')">At Risk</button>
+    <button class="filter-pill"    data-filter="active"   onclick="setFilter('active')">Active</button>
+    <span class="toolbar-right" id="lastRefreshed"></span>
+  </div>
+
+  <div class="main">
+    <div class="inst-list" id="instList">
+      <div class="empty-state"><div class="spinner"></div><p>Loading instructors...</p></div>
+    </div>
+    <div class="detail" id="detail">
+      <div class="detail-header">
+        <h2>Select an instructor</h2>
+        <span>Click a name to view course detail</span>
+      </div>
+      <div class="detail-scroll">
+        <div class="empty-state"><p>Course activity will appear here.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
