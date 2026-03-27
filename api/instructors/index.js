@@ -5,9 +5,11 @@ const STATUS_SORT = { inactive: 0, 'at-risk': 1, active: 2 };
 
 async function getActiveTerms() {
   const all = await bbFetchAll('/learn/api/public/v1/terms?limit=200');
+  const termFilter = process.env.BB_TERM_FILTER || '';
   const now = Date.now();
   return all.filter(t => {
     if (t.availability?.available !== 'Yes') return false;
+    if (termFilter && !t.name.includes(termFilter)) return false;
     if (!t.startDate && !t.endDate) return true;
     const start = t.startDate ? new Date(t.startDate).getTime() : -Infinity;
     const end = t.endDate ? new Date(t.endDate).getTime() : Infinity;
