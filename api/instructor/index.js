@@ -2,7 +2,7 @@ const { bbFetch, bbFetchAll } = require('../_shared/bb-client');
 const { computeStatus } = require('../_shared/activity');
 
 async function getActiveTerms() {
-  const all = await bbFetchAll('/learn/api/public/v1/terms?limit=200');
+  const all = await bbFetchAll('/learn/api/public/v1/terms?limit=100');
   const now = Date.now();
   return all.filter(t => {
     if (t.availability?.available !== 'Yes') return false;
@@ -28,7 +28,7 @@ async function getTimeSpent(courseId, userId) {
 
 async function getContentLastModified(courseId) {
   try {
-    const items = await bbFetchAll(`/learn/api/public/v1/courses/${courseId}/contents?limit=200`);
+    const items = await bbFetchAll(`/learn/api/public/v1/courses/${courseId}/contents?limit=100`);
     const dates = items.map(i => i.modified).filter(Boolean).sort().reverse();
     return dates[0] || null;
   } catch {
@@ -38,11 +38,11 @@ async function getContentLastModified(courseId) {
 
 async function getDiscussionPostCount(courseId, userId) {
   try {
-    const forums = await bbFetchAll(`/learn/api/public/v1/courses/${courseId}/forums?limit=200`);
+    const forums = await bbFetchAll(`/learn/api/public/v1/courses/${courseId}/forums?limit=100`);
     let count = 0;
     for (const forum of forums) {
       const posts = await bbFetchAll(
-        `/learn/api/public/v1/courses/${courseId}/forums/${forum.id}/threads?limit=200`
+        `/learn/api/public/v1/courses/${courseId}/forums/${forum.id}/threads?limit=100`
       );
       count += posts.filter(p => p.author?.id === userId).length;
     }
@@ -62,7 +62,7 @@ module.exports = async function (context, req) {
   try {
     const terms = await getActiveTerms();
     const courseArrays = await Promise.all(
-      terms.map(t => bbFetchAll(`/learn/api/public/v1/courses?termId=${t.id}&limit=200`))
+      terms.map(t => bbFetchAll(`/learn/api/public/v1/courses?termId=${t.id}&limit=100`))
     );
     const allCourses = courseArrays.flat();
 
@@ -70,7 +70,7 @@ module.exports = async function (context, req) {
     const found = await Promise.all(
       allCourses.map(async course => {
         const members = await bbFetchAll(
-          `/learn/api/public/v1/courses/${course.id}/users?role.roleType=Instructor&limit=200`
+          `/learn/api/public/v1/courses/${course.id}/users?role.roleType=Instructor&limit=100`
         );
         const m = members.find(m => m.userId === userId);
         return m ? { course, membership: m } : null;
@@ -83,7 +83,7 @@ module.exports = async function (context, req) {
         const [timeSpent, contentLastModified, gradeColumns, discussionPosts] = await Promise.all([
           getTimeSpent(course.id, userId),
           getContentLastModified(course.id),
-          bbFetchAll(`/learn/api/public/v1/courses/${course.id}/gradebook/columns?limit=200`)
+          bbFetchAll(`/learn/api/public/v1/courses/${course.id}/gradebook/columns?limit=100`)
             .catch(() => []),
           getDiscussionPostCount(course.id, userId),
         ]);

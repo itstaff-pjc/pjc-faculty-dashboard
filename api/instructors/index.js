@@ -4,7 +4,7 @@ const { computeStatus, worstStatus } = require('../_shared/activity');
 const STATUS_SORT = { inactive: 0, 'at-risk': 1, active: 2 };
 
 async function getActiveTerms() {
-  const all = await bbFetchAll('/learn/api/public/v1/terms?limit=200');
+  const all = await bbFetchAll('/learn/api/public/v1/terms?limit=100');
   const termFilter = process.env.BB_TERM_FILTER || '';
   const now = Date.now();
   return all.filter(t => {
@@ -22,7 +22,7 @@ module.exports = async function (context, req) {
     const terms = await getActiveTerms();
 
     const courseArrays = await Promise.all(
-      terms.map(t => bbFetchAll(`/learn/api/public/v1/courses?termId=${t.id}&limit=200`))
+      terms.map(t => bbFetchAll(`/learn/api/public/v1/courses?termId=${t.id}&limit=100`))
     );
     const courses = courseArrays.flat();
 
@@ -30,7 +30,7 @@ module.exports = async function (context, req) {
     const membershipArrays = await Promise.all(
       courses.map(c =>
         bbFetchAll(
-          `/learn/api/public/v1/courses/${c.id}/users?role.roleType=Instructor&expand=user&limit=200`
+          `/learn/api/public/v1/courses/${c.id}/users?role.roleType=Instructor&expand=user&limit=100`
         )
       )
     );

@@ -11,7 +11,7 @@ function isActiveTerm(term) {
 
 module.exports = async function (context, req) {
   try {
-    const all = await bbFetchAll('/learn/api/public/v1/terms?limit=200');
+    const all = await bbFetchAll('/learn/api/public/v1/terms?limit=100');
     const terms = all.filter(isActiveTerm).map(t => ({
       id: t.id,
       name: t.name,
