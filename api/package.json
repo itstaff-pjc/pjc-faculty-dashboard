@@ -6,7 +6,7 @@
     "test": "jest --testPathPattern=tests/"
   },
   "dependencies": {
-    "@azure/identity": "^4.9.0",
+    "@azure/identity": "~3.4.0",
     "@azure/storage-blob": "^12.26.0"
   },
   "devDependencies": {
