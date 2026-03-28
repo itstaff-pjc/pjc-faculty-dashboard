@@ -12,7 +12,11 @@
     <img src="PJCLogo_Stacked_FullColor_NoLocations.jpg" alt="Paris Junior College">
     <span class="header-title">Faculty Activity Dashboard</span>
     <span class="header-meta" id="termLabel"></span>
-    <button class="refresh-btn" id="refreshBtn" onclick="loadDashboard()">↺ Refresh</button>
+    <div class="header-right">
+      <span class="user-info" id="userInfo"></span>
+      <a class="logout-link" href="/.auth/logout">Sign out</a>
+      <button class="refresh-btn" id="refreshBtn" onclick="loadDashboard()">↺ Refresh</button>
+    </div>
   </header>
 
   <div class="toolbar">
@@ -21,7 +25,10 @@
     <button class="filter-pill"    data-filter="inactive" onclick="setFilter('inactive')">Inactive</button>
     <button class="filter-pill"    data-filter="at-risk"  onclick="setFilter('at-risk')">At Risk</button>
     <button class="filter-pill"    data-filter="active"   onclick="setFilter('active')">Active</button>
-    <span class="toolbar-right" id="lastRefreshed"></span>
+    <span class="toolbar-right">
+      <span id="syncStatus" class="sync-status"></span>
+      <span id="lastRefreshed"></span>
+    </span>
   </div>
 
   <div class="main">

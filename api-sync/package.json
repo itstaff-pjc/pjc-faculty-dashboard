@@ -1,5 +1,5 @@
 {
-  "name": "blackboard-faculty-dashboard-api",
+  "name": "pjc-faculty-sync",
   "version": "1.0.0",
   "engines": { "node": ">=18" },
   "scripts": {
