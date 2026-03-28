@@ -5,6 +5,10 @@
   "scripts": {
     "test": "jest --testPathPattern=tests/"
   },
+  "dependencies": {
+    "@azure/identity": "^4.9.0",
+    "@azure/storage-blob": "^12.26.0"
+  },
   "devDependencies": {
     "jest": "^29.7.0"
   },
