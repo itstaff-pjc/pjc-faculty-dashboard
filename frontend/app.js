@@ -2,6 +2,7 @@
 let allInstructors = [];
 let currentFilter = 'all';
 let selectedUserId = null;
+let syncMeta = null;
 
 // ── Data loading ──────────────────────────────────────────────────────────────
 
@@ -77,16 +78,27 @@ async function loadSyncStatus() {
   try {
     const res = await fetch('/api/sync-status');
     if (!res.ok) return;
-    const meta = await res.json();
+    syncMeta = await res.json();
     const el = document.getElementById('syncStatus');
-    if (!meta.lastSync) {
+    if (!syncMeta.lastSync) {
       el.textContent = 'No sync data yet';
       return;
     }
-    const days = Math.floor((Date.now() - new Date(meta.lastSync).getTime()) / 86400000);
+    const days = Math.floor((Date.now() - new Date(syncMeta.lastSync).getTime()) / 86400000);
     const when = days === 0 ? 'today' : days === 1 ? 'yesterday' : `${days} days ago`;
-    const errFlag = meta.status === 'error' ? ' ⚠ sync error' : '';
+    const errFlag = syncMeta.status === 'error' ? ' ⚠ sync error' : '';
     el.textContent = `Data synced: ${when}${errFlag}`;
+
+    const countdown = document.getElementById('termCountdown');
+    if (countdown && syncMeta.currentTerms?.length) {
+      const curr = syncMeta.currentTerms[0];
+      let text = `${curr.name}: ${curr.daysRemaining} days`;
+      if (syncMeta.upcomingTerms?.length) {
+        const up = syncMeta.upcomingTerms[0];
+        text += ` · ${up.name} in ${up.daysUntilStart} days`;
+      }
+      countdown.textContent = text;
+    }
   } catch {
     // sync status is cosmetic — silently ignore
   }
@@ -111,12 +123,14 @@ function goBack() {
 }
 
 function updateFilterCounts() {
+  const flagged = allInstructors.filter(i => i.flaggedCourseCount > 0).length;
   const counts = { all: allInstructors.length, inactive: 0, 'at-risk': 0, active: 0 };
   for (const i of allInstructors) counts[i.status] = (counts[i.status] || 0) + 1;
   document.querySelector('[data-filter="all"]').textContent      = `All (${counts.all})`;
   document.querySelector('[data-filter="inactive"]').textContent = `Inactive (${counts.inactive || 0})`;
   document.querySelector('[data-filter="at-risk"]').textContent  = `At Risk (${counts['at-risk'] || 0})`;
   document.querySelector('[data-filter="active"]').textContent   = `Active (${counts.active || 0})`;
+  document.querySelector('[data-filter="flagged"]').textContent  = `Flagged (${flagged})`;
 }
 
 // ── Render: instructor list ───────────────────────────────────────────────────
@@ -125,26 +139,65 @@ function setInstList(html) {
   document.getElementById('instList').innerHTML = html;
 }
 
+function renderStatSummary(stats) {
+  return `
+    <div class="stat-summary">
+      <div class="stat-summary-card">
+        <div class="stat-summary-value" style="color:#991b1b">${stats.zeroLogins}</div>
+        <div class="stat-summary-label">Zero Logins</div>
+      </div>
+      <div class="stat-summary-card">
+        <div class="stat-summary-value" style="color:#854d0e">${stats.noAssignments}</div>
+        <div class="stat-summary-label">No Assignments</div>
+      </div>
+      <div class="stat-summary-card">
+        <div class="stat-summary-value" style="color:#854d0e">${stats.noContentUpdate}</div>
+        <div class="stat-summary-label">No Content Update</div>
+      </div>
+      <div class="stat-summary-card">
+        <div class="stat-summary-value" style="color:#064429">${stats.total}</div>
+        <div class="stat-summary-label">Total Courses</div>
+      </div>
+    </div>`;
+}
+
 function renderInstructors() {
-  const list = currentFilter === 'all'
-    ? allInstructors
-    : allInstructors.filter(i => i.status === currentFilter);
+  let list;
+  if (currentFilter === 'flagged') {
+    list = allInstructors
+      .filter(i => i.flaggedCourseCount > 0)
+      .sort((a, b) => b.flaggedCourseCount - a.flaggedCourseCount || a.name.localeCompare(b.name));
+  } else if (currentFilter === 'all') {
+    list = allInstructors;
+  } else {
+    list = allInstructors.filter(i => i.status === currentFilter);
+  }
 
   if (!list.length) {
     setInstList('<div class="empty-state"><p>No instructors match this filter.</p></div>');
     return;
   }
 
-  setInstList(list.map(i => `
+  let html = '';
+  if (currentFilter === 'flagged' && syncMeta?.courseStats) {
+    html += renderStatSummary(syncMeta.courseStats);
+  }
+
+  html += list.map(i => `
     <div class="inst-row${i.userId === selectedUserId ? ' selected' : ''}"
          onclick="loadDetail('${escAttr(i.userId)}')">
       <div class="inst-name">
         <strong>${escHtml(i.name)}</strong>
         <span>${i.courseCount} course${i.courseCount !== 1 ? 's' : ''}</span>
+        ${currentFilter === 'flagged' && i.flags?.length
+          ? `<span class="inst-flag-line">${escHtml(i.flags.join(' · '))}</span>`
+          : ''}
       </div>
       <span class="badge ${i.status}">${statusLabel(i.status)}</span>
     </div>
-  `).join(''));
+  `).join('');
+
+  setInstList(html);
 }
 
 // ── Render: detail panel ──────────────────────────────────────────────────────

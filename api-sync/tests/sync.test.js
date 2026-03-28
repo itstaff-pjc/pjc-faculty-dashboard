@@ -13,12 +13,20 @@ function daysAgo(n) {
 }
 
 const now = Date.now();
-const TERMS = [{
-  id: '_1_1', name: 'Spring 2026',
-  availability: { available: 'Yes' },
-  startDate: new Date(now - 30 * 86400000).toISOString(),
-  endDate: new Date(now + 60 * 86400000).toISOString(),
-}];
+const TERMS = [
+  {
+    id: '_1_1', name: 'Spring 2026',
+    availability: { available: 'Yes' },
+    startDate: new Date(now - 30 * 86400000).toISOString(),
+    endDate: new Date(now + 48 * 86400000).toISOString(),
+  },
+  {
+    id: '_2_1', name: 'Summer 2026',
+    availability: { available: 'Yes' },
+    startDate: new Date(now + 52 * 86400000).toISOString(),
+    endDate: new Date(now + 110 * 86400000).toISOString(),
+  },
+];
 const COURSES = [{ id: '_10_1', name: 'Composition I', courseId: 'ENGL-1301-01' }];
 const MEMBERS = [{
   userId: '_100_1',
@@ -55,6 +63,8 @@ test('writes instructors.json, one instructor blob, and meta.json with ok status
   expect(instructors[0].name).toBe('Smith, Jane');
   expect(instructors[0].status).toBe('active');
   expect(instructors[0].courseCount).toBe(1);
+  expect(instructors[0].flaggedCourseCount).toBe(0);
+  expect(instructors[0].flags).toEqual([]);
 
   // per-instructor detail blob written
   const detailCall = blobClient.writeBlob.mock.calls.find(c => c[0] === 'instructor/_100_1.json');
@@ -70,8 +80,14 @@ test('writes instructors.json, one instructor blob, and meta.json with ok status
   expect(metaCall[1].status).toBe('ok');
   expect(metaCall[1].instructorCount).toBe(1);
   expect(metaCall[1].termCount).toBe(1);
+  expect(metaCall[1].courseStats).toBeDefined();
+  expect(metaCall[1].courseStats.total).toBe(1);
   expect(metaCall[1].error).toBeNull();
   expect(metaCall[1].lastSync).toBeTruthy();
+  expect(metaCall[1].currentTerms).toHaveLength(1);
+  expect(metaCall[1].currentTerms[0].name).toBe('Spring 2026');
+  expect(metaCall[1].upcomingTerms).toHaveLength(1);
+  expect(metaCall[1].upcomingTerms[0].name).toBe('Summer 2026');
 });
 
 test('writes error state to meta.json when Blackboard call fails, leaving existing blobs intact', async () => {
@@ -123,4 +139,84 @@ test('sorts instructors inactive-first in instructors.json', async () => {
   const { instructors } = instructorsCall[1];
   expect(instructors[0].status).toBe('inactive');
   expect(instructors[1].status).toBe('active');
+});
+
+test('writes currentTerms and upcomingTerms into meta.json', async () => {
+  bbClient.bbFetchAll.mockImplementation(async (path) => {
+    if (path.includes('/terms')) return TERMS;
+    if (path.includes('courses?termId')) return COURSES;
+    if (path.includes('/users?role')) return MEMBERS;
+    if (path.includes('/contents')) return [];
+    return [];
+  });
+  bbClient.bbFetch.mockRejectedValue(new Error('N/A'));
+  blobClient.writeBlob.mockResolvedValue();
+
+  const handler = require('../sync');
+  await handler(makeContext(), {});
+
+  const metaCall = blobClient.writeBlob.mock.calls.find(c => c[0] === 'meta.json');
+  expect(metaCall[1].currentTerms).toHaveLength(1);
+  expect(metaCall[1].currentTerms[0].name).toBe('Spring 2026');
+  expect(metaCall[1].currentTerms[0].daysRemaining).toBe(48);
+  expect(metaCall[1].currentTerms[0].endDate).toBeTruthy();
+  expect(metaCall[1].upcomingTerms).toHaveLength(1);
+  expect(metaCall[1].upcomingTerms[0].name).toBe('Summer 2026');
+  expect(metaCall[1].upcomingTerms[0].daysUntilStart).toBe(52);
+  expect(metaCall[1].upcomingTerms[0].startDate).toBeTruthy();
+});
+
+test('computes flaggedCourseCount and flags on each instructor in instructors.json', async () => {
+  const MEMBERS_NEVER = [{
+    userId: '_100_1', courseRoleId: 'Instructor', lastAccessed: null,
+    user: { id: '_100_1', name: { given: 'Paul', family: 'Miller' } },
+  }];
+
+  bbClient.bbFetchAll.mockImplementation(async (path) => {
+    if (path.includes('/terms')) return TERMS;
+    if (path.includes('courses?termId')) return COURSES;
+    if (path.includes('/users?role')) return MEMBERS_NEVER;
+    if (path.includes('/contents')) return []; // no assignments, no content modified
+    return [];
+  });
+  bbClient.bbFetch.mockRejectedValue(new Error('N/A'));
+  blobClient.writeBlob.mockResolvedValue();
+
+  const handler = require('../sync');
+  await handler(makeContext(), {});
+
+  const instructorsCall = blobClient.writeBlob.mock.calls.find(c => c[0] === 'instructors.json');
+  const { instructors } = instructorsCall[1];
+  expect(instructors[0].flaggedCourseCount).toBe(1);
+  expect(instructors[0].flags).toContain('Never logged in');
+  expect(instructors[0].flags).toContain('0 assignments');
+  expect(instructors[0].flags).toContain('No content update');
+});
+
+test('writes courseStats into meta.json', async () => {
+  const MEMBERS_NEVER = [{
+    userId: '_100_1', courseRoleId: 'Instructor', lastAccessed: null,
+    user: { id: '_100_1', name: { given: 'Paul', family: 'Miller' } },
+  }];
+
+  bbClient.bbFetchAll.mockImplementation(async (path) => {
+    if (path.includes('/terms')) return TERMS;
+    if (path.includes('courses?termId')) return COURSES;
+    if (path.includes('/users?role')) return MEMBERS_NEVER;
+    if (path.includes('/contents')) return [];
+    return [];
+  });
+  bbClient.bbFetch.mockRejectedValue(new Error('N/A'));
+  blobClient.writeBlob.mockResolvedValue();
+
+  const handler = require('../sync');
+  await handler(makeContext(), {});
+
+  const metaCall = blobClient.writeBlob.mock.calls.find(c => c[0] === 'meta.json');
+  expect(metaCall[1].courseStats).toEqual({
+    total: 1,
+    zeroLogins: 1,
+    noAssignments: 1,
+    noContentUpdate: 1,
+  });
 });
