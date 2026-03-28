@@ -22,6 +22,6 @@ module.exports = async function (context, _req) {
       return;
     }
     context.log('Error in /api/instructors:', err.message);
-    context.res = { status: 500, body: { error: 'Failed to load instructors' } };
+    context.res = { status: 500, body: { error: `Failed to load instructors: ${err.message}` } };
   }
 };
