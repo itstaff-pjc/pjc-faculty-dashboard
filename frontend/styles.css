@@ -1,14 +1,15 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --green: #1B5C2A;
-  --green-dark: #134520;
-  --green-light: #e8f2ea;
-  --gold: #F0B429;
-  --text: #1a1a1a;
-  --text-muted: #666;
-  --border: #d0e4d0;
-  --bg: #f4f6f4;
+  --green:       #064429;
+  --green-dark:  #042e1c;
+  --green-light: #e6f0ec;
+  --gold:        #FFC72C;
+  --gold-dark:   #e0ae20;
+  --text:        #1a1a1a;
+  --text-muted:  #6b7280;
+  --border:      #dde8e3;
+  --bg:          #f5f8f6;
   --active-bg: #dcfce7; --active-text: #166534;
   --risk-bg: #fef9c3;   --risk-text: #854d0e;
   --inactive-bg: #fee2e2; --inactive-text: #991b1b;
@@ -94,7 +95,7 @@ body {
   border-left: 3px solid transparent;
 }
 .inst-row:hover { background: var(--green-light); }
-.inst-row.selected { background: #e6f2e8; border-left-color: var(--gold); }
+.inst-row.selected { background: #eaf4ef; border-left-color: var(--gold); }
 .inst-name { flex: 1; }
 .inst-name strong { display: block; font-size: 13px; color: var(--green); }
 .inst-name span { display: block; font-size: 11px; color: var(--text-muted); margin-top: 1px; }
