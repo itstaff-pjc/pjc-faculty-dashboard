@@ -41,3 +41,4 @@ jobs:
           app-name: pjc-faculty-sync
           package: api-sync
           respect-funcignore: true
+          scm-do-build-during-deployment: true
