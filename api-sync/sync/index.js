@@ -30,22 +30,25 @@ async function getTimeSpent(courseId, userId) {
   }
 }
 
-async function getContentLastModified(courseId) {
+async function getCourseContentStats(courseId) {
   try {
     const items = await bbFetchAll(`/learn/api/public/v1/courses/${courseId}/contents?limit=100`);
     const dates = items.map(i => i.modified).filter(Boolean).sort().reverse();
-    return dates[0] || null;
+    const assignmentCount = items.filter(i =>
+      i.contentHandler?.id?.includes('assignment')
+    ).length;
+    return { contentLastModified: dates[0] || null, assignmentCount };
   } catch {
-    return null;
+    return { contentLastModified: null, assignmentCount: 0 };
   }
 }
 
 async function buildInstructorDetail(userId, instructorCourses) {
   const courses = await Promise.all(
     instructorCourses.map(async ({ course, membership }) => {
-      const [timeSpent, contentLastModified] = await Promise.all([
+      const [timeSpent, { contentLastModified, assignmentCount }] = await Promise.all([
         getTimeSpent(course.id, userId),
-        getContentLastModified(course.id),
+        getCourseContentStats(course.id),
       ]);
       return {
         courseId: course.id,
@@ -55,6 +58,7 @@ async function buildInstructorDetail(userId, instructorCourses) {
         status: computeStatus(membership.lastAccessed || null),
         timeSpent,
         contentLastModified,
+        assignmentCount,
       };
     })
   );

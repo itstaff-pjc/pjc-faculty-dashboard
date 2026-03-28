@@ -195,6 +195,10 @@ function renderDetail(inst, courses) {
                 <div class="metric-label">Content Updated</div>
                 <div class="metric-value ${accessCls}">${escHtml(content)}</div>
               </div>
+              <div class="metric">
+                <div class="metric-label">Assignments</div>
+                <div class="metric-value">${c.assignmentCount ?? 0}</div>
+              </div>
             </div>
           </div>`;
       }).join('')
