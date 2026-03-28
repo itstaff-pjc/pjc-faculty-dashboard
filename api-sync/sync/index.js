@@ -4,19 +4,32 @@ const { writeBlob } = require('../_shared/blob-client');
 
 const STATUS_SORT = { inactive: 0, 'at-risk': 1, active: 2 };
 
-async function getActiveTerms() {
-  const startYear = parseInt(process.env.BB_START_YEAR || '2026', 10);
+async function getAllTerms(startYear) {
   const all = await bbFetchAll('/learn/api/public/v1/terms?limit=100&fields=id,name,availability,startDate,endDate');
-  const now = Date.now();
   const startOfYear = new Date(`${startYear}-01-01`).getTime();
-  return all.filter(t => {
-    if (t.availability?.available !== 'Yes') return false;
-    if (!t.startDate) return false;
-    const start = new Date(t.startDate).getTime();
-    if (start < startOfYear) return false;
-    const end = t.endDate ? new Date(t.endDate).getTime() : Infinity;
-    return now >= start && now <= end;
-  });
+  return all.filter(t =>
+    t.availability?.available === 'Yes' &&
+    t.startDate &&
+    new Date(t.startDate).getTime() >= startOfYear
+  );
+}
+
+function splitTerms(allTerms) {
+  const now = Date.now();
+  const currentTerms = allTerms
+    .filter(t => {
+      const start = new Date(t.startDate).getTime();
+      const end = t.endDate ? new Date(t.endDate).getTime() : Infinity;
+      return now >= start && now <= end;
+    })
+    .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+
+  const upcomingTerms = allTerms
+    .filter(t => new Date(t.startDate).getTime() > now)
+    .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
+    .slice(0, 2);
+
+  return { currentTerms, upcomingTerms };
 }
 
 async function getTimeSpent(courseId, userId) {
@@ -69,10 +82,12 @@ module.exports = async function (context, myTimer) {
   context.log('Nightly sync started');
 
   try {
-    const terms = await getActiveTerms();
+    const startYear = parseInt(process.env.BB_START_YEAR || '2026', 10);
+    const allTerms = await getAllTerms(startYear);
+    const { currentTerms, upcomingTerms } = splitTerms(allTerms);
 
     const allCourses = [];
-    for (const t of terms) {
+    for (const t of currentTerms) {
       const termCourses = await bbFetchAll(`/learn/api/public/v1/courses?termId=${t.id}&limit=100`);
       allCourses.push(...termCourses);
     }
@@ -134,12 +149,25 @@ module.exports = async function (context, myTimer) {
     context.log(`Wrote ${map.size} instructor detail blobs`);
 
     // Write success meta
+    const now = Date.now();
     await writeBlob('meta.json', {
       lastSync: new Date().toISOString(),
       instructorCount: instructorSummaries.length,
-      termCount: terms.length,
+      termCount: currentTerms.length,
       status: 'ok',
       error: null,
+      currentTerms: currentTerms.map(t => ({
+        name: t.name,
+        endDate: t.endDate || null,
+        daysRemaining: t.endDate
+          ? Math.max(0, Math.ceil((new Date(t.endDate).getTime() - now) / 86400000))
+          : null,
+      })),
+      upcomingTerms: upcomingTerms.map(t => ({
+        name: t.name,
+        startDate: t.startDate,
+        daysUntilStart: Math.ceil((new Date(t.startDate).getTime() - now) / 86400000),
+      })),
     });
     context.log('Sync complete');
 

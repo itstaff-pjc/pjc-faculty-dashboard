@@ -13,12 +13,20 @@ function daysAgo(n) {
 }
 
 const now = Date.now();
-const TERMS = [{
-  id: '_1_1', name: 'Spring 2026',
-  availability: { available: 'Yes' },
-  startDate: new Date(now - 30 * 86400000).toISOString(),
-  endDate: new Date(now + 60 * 86400000).toISOString(),
-}];
+const TERMS = [
+  {
+    id: '_1_1', name: 'Spring 2026',
+    availability: { available: 'Yes' },
+    startDate: new Date(now - 30 * 86400000).toISOString(),
+    endDate: new Date(now + 48 * 86400000).toISOString(),
+  },
+  {
+    id: '_2_1', name: 'Summer 2026',
+    availability: { available: 'Yes' },
+    startDate: new Date(now + 52 * 86400000).toISOString(),
+    endDate: new Date(now + 110 * 86400000).toISOString(),
+  },
+];
 const COURSES = [{ id: '_10_1', name: 'Composition I', courseId: 'ENGL-1301-01' }];
 const MEMBERS = [{
   userId: '_100_1',
@@ -72,6 +80,10 @@ test('writes instructors.json, one instructor blob, and meta.json with ok status
   expect(metaCall[1].termCount).toBe(1);
   expect(metaCall[1].error).toBeNull();
   expect(metaCall[1].lastSync).toBeTruthy();
+  expect(metaCall[1].currentTerms).toHaveLength(1);
+  expect(metaCall[1].currentTerms[0].name).toBe('Spring 2026');
+  expect(metaCall[1].upcomingTerms).toHaveLength(1);
+  expect(metaCall[1].upcomingTerms[0].name).toBe('Summer 2026');
 });
 
 test('writes error state to meta.json when Blackboard call fails, leaving existing blobs intact', async () => {
@@ -123,4 +135,29 @@ test('sorts instructors inactive-first in instructors.json', async () => {
   const { instructors } = instructorsCall[1];
   expect(instructors[0].status).toBe('inactive');
   expect(instructors[1].status).toBe('active');
+});
+
+test('writes currentTerms and upcomingTerms into meta.json', async () => {
+  bbClient.bbFetchAll.mockImplementation(async (path) => {
+    if (path.includes('/terms')) return TERMS;
+    if (path.includes('courses?termId')) return COURSES;
+    if (path.includes('/users?role')) return MEMBERS;
+    if (path.includes('/contents')) return [];
+    return [];
+  });
+  bbClient.bbFetch.mockRejectedValue(new Error('N/A'));
+  blobClient.writeBlob.mockResolvedValue();
+
+  const handler = require('../sync');
+  await handler(makeContext(), {});
+
+  const metaCall = blobClient.writeBlob.mock.calls.find(c => c[0] === 'meta.json');
+  expect(metaCall[1].currentTerms).toHaveLength(1);
+  expect(metaCall[1].currentTerms[0].name).toBe('Spring 2026');
+  expect(metaCall[1].currentTerms[0].daysRemaining).toBe(48);
+  expect(metaCall[1].currentTerms[0].endDate).toBeTruthy();
+  expect(metaCall[1].upcomingTerms).toHaveLength(1);
+  expect(metaCall[1].upcomingTerms[0].name).toBe('Summer 2026');
+  expect(metaCall[1].upcomingTerms[0].daysUntilStart).toBe(52);
+  expect(metaCall[1].upcomingTerms[0].startDate).toBeTruthy();
 });
