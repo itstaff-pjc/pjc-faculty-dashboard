@@ -163,7 +163,7 @@ function renderDetail(inst, courses) {
               <span class="badge ${c.status}">${statusLabel(c.status)}</span>
             </div>
             <div class="metric-grid">
-              <div class="metric">
+              <div class="metric ${accessCls}">
                 <div class="metric-label">Last Login</div>
                 <div class="metric-value ${accessCls}">${escHtml(accessed)}</div>
               </div>
@@ -171,11 +171,11 @@ function renderDetail(inst, courses) {
                 <div class="metric-label">Time Spent</div>
                 <div class="metric-value">${escHtml(c.timeSpent)}</div>
               </div>
-              <div class="metric">
+              <div class="metric ${accessCls}">
                 <div class="metric-label">Content Updated</div>
-                <div class="metric-value">${escHtml(content)}</div>
+                <div class="metric-value ${accessCls}">${escHtml(content)}</div>
               </div>
-              <div class="metric">
+              <div class="metric ${gradesCls}">
                 <div class="metric-label">Grades Posted</div>
                 <div class="metric-value ${gradesCls}">${escHtml(c.gradesPosted)}</div>
               </div>

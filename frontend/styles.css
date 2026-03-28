@@ -175,7 +175,10 @@ body {
 .course-card-title { font-size: 13px; font-weight: 700; color: var(--green); }
 .course-card-code { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 7px; }
-.metric { background: var(--bg); border-radius: 5px; padding: 7px 10px; }
+.metric { background: var(--bg); border-radius: 5px; padding: 7px 10px; border-left: 3px solid #9ca3af; }
+.metric.bad  { border-left-color: #dc2626; }
+.metric.warn { border-left-color: #ca8a04; }
+.metric.good { border-left-color: #16a34a; }
 .metric-label { font-size: 9px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); margin-bottom: 2px; }
 .metric-value { font-size: 12px; font-weight: 600; }
 .metric-value.good { color: #16a34a; }
