@@ -1,5 +1,8 @@
 const { bbFetchAll } = require('../_shared/bb-client');
 const { computeStatus, worstStatus } = require('../_shared/activity');
+const { getCached, setCached } = require('../_shared/cache');
+
+const CACHE_TTL_SECONDS = 300; // 5 minutes
 
 const STATUS_SORT = { inactive: 0, 'at-risk': 1, active: 2 };
 
@@ -19,6 +22,12 @@ async function getActiveTerms() {
 
 module.exports = async function (context, req) {
   try {
+    const cached = getCached('instructors');
+    if (cached) {
+      context.res = { status: 200, body: cached };
+      return;
+    }
+
     const terms = await getActiveTerms();
 
     // Fetch courses sequentially per term to avoid overwhelming Blackboard
@@ -75,7 +84,9 @@ module.exports = async function (context, req) {
         STATUS_SORT[a.status] - STATUS_SORT[b.status] || a.name.localeCompare(b.name)
       );
 
-    context.res = { status: 200, body: { instructors } };
+    const body = { instructors };
+    setCached('instructors', body, CACHE_TTL_SECONDS);
+    context.res = { status: 200, body };
   } catch (err) {
     context.log('Error in /api/instructors:', err.message, err.cause);
     context.res = { status: 500, body: { error: 'Failed to fetch instructors', detail: err.message, cause: String(err.cause || '') } };

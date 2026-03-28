@@ -16,4 +16,17 @@ function clearToken() {
   _expiry = 0;
 }
 
-module.exports = { getToken, setToken, clearToken };
+// Generic response cache keyed by string
+const _cache = new Map();
+
+function getCached(key) {
+  const entry = _cache.get(key);
+  if (entry && Date.now() < entry.expiry) return entry.value;
+  return null;
+}
+
+function setCached(key, value, ttlSeconds) {
+  _cache.set(key, { value, expiry: Date.now() + ttlSeconds * 1000 });
+}
+
+module.exports = { getToken, setToken, clearToken, getCached, setCached };

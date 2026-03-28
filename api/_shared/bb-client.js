@@ -25,7 +25,7 @@ async function getAccessToken() {
   return getToken() || fetchNewToken();
 }
 
-async function bbFetch(path, retries = 4) {
+async function bbFetch(path) {
   const token = await getAccessToken();
   const res = await fetch(`${process.env.BB_BASE_URL}${path}`, {
     headers: {
@@ -33,13 +33,6 @@ async function bbFetch(path, retries = 4) {
       'Content-Type': 'application/json',
     },
   });
-
-  if (res.status === 429 && retries > 0) {
-    const retryAfter = parseInt(res.headers.get('Retry-After') || '15', 10);
-    await new Promise(r => setTimeout(r, retryAfter * 1000));
-    return bbFetch(path, retries - 1);
-  }
-
   if (!res.ok) throw new Error(`Blackboard API error: ${res.status} ${path}`);
   return res.json();
 }
