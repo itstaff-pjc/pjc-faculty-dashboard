@@ -3,10 +3,16 @@ const { getCached, setCached } = require('../_shared/cache');
 
 const CACHE_TTL_SECONDS = 300; // 5 minutes
 
+const VALID_USER_ID = /^[a-zA-Z0-9_-]+$/;
+
 module.exports = async function (context, req) {
   const userId = req.params?.id;
   if (!userId) {
     context.res = { status: 400, body: { error: 'Missing instructor id' } };
+    return;
+  }
+  if (!VALID_USER_ID.test(userId)) {
+    context.res = { status: 400, body: { error: 'Invalid instructor id' } };
     return;
   }
 
@@ -26,6 +32,6 @@ module.exports = async function (context, req) {
       return;
     }
     context.log('Error in /api/instructor:', err.message);
-    context.res = { status: 500, body: { error: 'Failed to load instructor detail', detail: err.message } };
+    context.res = { status: 500, body: { error: 'Failed to load instructor detail' } };
   }
 };
