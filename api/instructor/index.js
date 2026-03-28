@@ -2,12 +2,15 @@ const { bbFetch, bbFetchAll } = require('../_shared/bb-client');
 const { computeStatus } = require('../_shared/activity');
 
 async function getActiveTerms() {
-  const all = await bbFetchAll('/learn/api/public/v1/terms?limit=100');
+  const startYear = parseInt(process.env.BB_START_YEAR || '2026', 10);
+  const all = await bbFetchAll('/learn/api/public/v1/terms?limit=100&fields=id,name,availability,startDate,endDate');
   const now = Date.now();
+  const startOfYear = new Date(`${startYear}-01-01`).getTime();
   return all.filter(t => {
     if (t.availability?.available !== 'Yes') return false;
-    if (!t.startDate && !t.endDate) return true;
-    const start = t.startDate ? new Date(t.startDate).getTime() : -Infinity;
+    if (!t.startDate) return false;
+    const start = new Date(t.startDate).getTime();
+    if (start < startOfYear) return false;
     const end = t.endDate ? new Date(t.endDate).getTime() : Infinity;
     return now >= start && now <= end;
   });
