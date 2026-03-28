@@ -218,6 +218,7 @@ body {
   /* Navbar: compact, show mobile-only controls */
   .navbar { padding: 0 14px; height: 46px; gap: 8px; }
   .navbar-meta { display: none; }
+  body.detail-open .navbar-meta { display: inline; }
   .back-btn { display: flex; }
   .navbar-signout { display: block; }
 
