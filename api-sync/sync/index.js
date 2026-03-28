@@ -43,10 +43,9 @@ async function getContentLastModified(courseId) {
 async function buildInstructorDetail(userId, instructorCourses) {
   const courses = await Promise.all(
     instructorCourses.map(async ({ course, membership }) => {
-      const [timeSpent, contentLastModified, gradeColumns] = await Promise.all([
+      const [timeSpent, contentLastModified] = await Promise.all([
         getTimeSpent(course.id, userId),
         getContentLastModified(course.id),
-        bbFetchAll(`/learn/api/public/v1/courses/${course.id}/gradebook/columns?limit=100`).catch(() => []),
       ]);
       return {
         courseId: course.id,
@@ -56,8 +55,6 @@ async function buildInstructorDetail(userId, instructorCourses) {
         status: computeStatus(membership.lastAccessed || null),
         timeSpent,
         contentLastModified,
-        gradeColumnsCount: gradeColumns.length,
-        gradesPosted: gradeColumns.length > 0 ? 'Yes' : 'None',
       };
     })
   );

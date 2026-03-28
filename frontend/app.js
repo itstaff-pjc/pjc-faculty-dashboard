@@ -173,7 +173,6 @@ function renderDetail(inst, courses) {
         const accessed = c.lastAccessed ? relDate(c.lastAccessed) : 'Never';
         const content  = c.contentLastModified ? relDate(c.contentLastModified) : 'N/A';
         const accessCls = c.status === 'inactive' ? 'bad' : c.status === 'at-risk' ? 'warn' : 'good';
-        const gradesCls = c.gradesPosted === 'None' ? 'bad' : 'good';
         return `
           <div class="course-card">
             <div class="course-card-header">
@@ -195,16 +194,6 @@ function renderDetail(inst, courses) {
               <div class="metric ${accessCls}">
                 <div class="metric-label">Content Updated</div>
                 <div class="metric-value ${accessCls}">${escHtml(content)}</div>
-              </div>
-              <div class="metric ${gradesCls}">
-                <div class="metric-label">Grades Posted</div>
-                <div class="metric-value ${gradesCls}">${escHtml(c.gradesPosted)}</div>
-              </div>
-            </div>
-            <div class="stat-row">
-              <div class="stat">
-                <div class="stat-label">Grade Columns</div>
-                <div class="stat-value">${c.gradeColumnsCount}</div>
               </div>
             </div>
           </div>`;

@@ -34,7 +34,6 @@ test('writes instructors.json, one instructor blob, and meta.json with ok status
     if (path.includes('/terms')) return TERMS;
     if (path.includes('courses?termId')) return COURSES;
     if (path.includes('/users?role')) return MEMBERS;
-    if (path.includes('/gradebook/columns')) return [{ id: '_50_1' }];
     if (path.includes('/contents')) return [];
     return [];
   });
@@ -60,7 +59,7 @@ test('writes instructors.json, one instructor blob, and meta.json with ok status
   expect(detailCall[1].userId).toBe('_100_1');
   expect(detailCall[1].courses).toHaveLength(1);
   expect(detailCall[1].courses[0].courseCode).toBe('ENGL-1301-01');
-  expect(detailCall[1].courses[0].gradesPosted).toBe('Yes');
+  expect(detailCall[1].courses[0].courseCode).toBe('ENGL-1301-01');
 
   // meta.json written with ok status and correct counts
   const metaCall = blobClient.writeBlob.mock.calls.find(c => c[0] === 'meta.json');
