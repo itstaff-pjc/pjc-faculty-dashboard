@@ -21,19 +21,26 @@ module.exports = async function (context, req) {
   try {
     const terms = await getActiveTerms();
 
-    const courseArrays = await Promise.all(
-      terms.map(t => bbFetchAll(`/learn/api/public/v1/courses?termId=${t.id}&limit=100`))
-    );
-    const courses = courseArrays.flat();
+    // Fetch courses sequentially per term to avoid overwhelming Blackboard
+    const courses = [];
+    for (const t of terms) {
+      const termCourses = await bbFetchAll(`/learn/api/public/v1/courses?termId=${t.id}&limit=100`);
+      courses.push(...termCourses);
+    }
 
-    // expand=user returns name inline, avoiding N extra user-lookup calls
-    const membershipArrays = await Promise.all(
-      courses.map(c =>
-        bbFetchAll(
-          `/learn/api/public/v1/courses/${c.id}/users?role.roleType=Instructor&expand=user&limit=100`
+    // Fetch memberships in small batches to avoid connection overload
+    const membershipArrays = [];
+    for (let i = 0; i < courses.length; i += 5) {
+      const batch = courses.slice(i, i + 5);
+      const batchResults = await Promise.all(
+        batch.map(c =>
+          bbFetchAll(
+            `/learn/api/public/v1/courses/${c.id}/users?role.roleType=Instructor&expand=user&limit=100`
+          )
         )
-      )
-    );
+      );
+      membershipArrays.push(...batchResults);
+    }
 
     // Build map: userId → { userId, name, courses[] }
     const map = new Map();
@@ -70,7 +77,7 @@ module.exports = async function (context, req) {
 
     context.res = { status: 200, body: { instructors } };
   } catch (err) {
-    context.log('Error in /api/instructors:', err.message);
-    context.res = { status: 500, body: { error: 'Failed to fetch instructors', detail: err.message } };
+    context.log('Error in /api/instructors:', err.message, err.cause);
+    context.res = { status: 500, body: { error: 'Failed to fetch instructors', detail: err.message, cause: String(err.cause || '') } };
   }
 };
