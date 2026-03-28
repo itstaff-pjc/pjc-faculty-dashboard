@@ -31,6 +31,13 @@ async function loadDashboard() {
 async function loadDetail(userId) {
   selectedUserId = userId;
   renderInstructors(); // update selected highlight
+  if (window.innerWidth <= 768) {
+    const inst = allInstructors.find(i => i.userId === userId);
+    document.body.classList.add('detail-open');
+    document.getElementById('navbarTitle').textContent = inst?.name || 'Instructor';
+    document.getElementById('termLabel').innerHTML =
+      inst ? `<span class="badge ${inst.status}">${statusLabel(inst.status)}</span>` : '';
+  }
   showDetailLoading();
 
   try {
@@ -52,8 +59,9 @@ async function loadUserInfo() {
     if (!res.ok) return;
     const { clientPrincipal } = await res.json();
     if (clientPrincipal) {
-      document.getElementById('userInfo').textContent =
-        clientPrincipal.userDetails || clientPrincipal.userId;
+      const name = clientPrincipal.userDetails || clientPrincipal.userId;
+      const el = document.getElementById('mastheadUser');
+      if (el) el.textContent = name;
     }
   } catch {
     // user info is cosmetic — silently ignore
@@ -86,6 +94,14 @@ function setFilter(filter) {
   document.querySelectorAll('.filter-pill').forEach(el =>
     el.classList.toggle('on', el.dataset.filter === filter)
   );
+  renderInstructors();
+}
+
+function goBack() {
+  document.body.classList.remove('detail-open');
+  document.getElementById('navbarTitle').textContent = 'Faculty Activity Dashboard';
+  document.getElementById('termLabel').textContent = '';
+  selectedUserId = null;
   renderInstructors();
 }
 
