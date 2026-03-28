@@ -36,9 +36,12 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS_SYNC }}
 
       - name: Deploy to Azure Functions
-        uses: Azure/functions-action@fd80521afbba9a2a76a99ba1acc07aff8d733d11 # v1.5.2
-        with:
-          app-name: pjc-faculty-sync
-          package: api-sync
-          respect-funcignore: true
-          scm-do-build-during-deployment: true
+        run: |
+          cd api-sync
+          zip -r ../function-app.zip . --exclude "tests/*"
+          az functionapp deploy \
+            --name pjc-faculty-sync \
+            --resource-group rg-pjc-helpdesk \
+            --src-path ../function-app.zip \
+            --type zip \
+            --async false
