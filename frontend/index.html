@@ -8,13 +8,19 @@
 </head>
 <body>
 
-  <header class="header">
+  <div class="masthead">
     <img src="PJCLogo_Stacked_FullColor_NoLocations.jpg" alt="Paris Junior College">
-    <span class="header-title">Faculty Activity Dashboard</span>
-    <span class="header-meta" id="termLabel"></span>
-    <div class="header-right">
-      <span class="user-info" id="userInfo"></span>
-      <a class="logout-link" href="/.auth/logout">Sign out</a>
+    <div class="masthead-right">
+      <span class="masthead-user" id="mastheadUser"></span>
+      <a class="masthead-signout" href="/.auth/logout">Sign out</a>
+    </div>
+  </div>
+  <header class="navbar">
+    <button class="back-btn" id="backBtn" onclick="goBack()">‹</button>
+    <span class="navbar-title" id="navbarTitle">Faculty Activity Dashboard</span>
+    <span class="navbar-meta" id="termLabel"></span>
+    <div class="navbar-right">
+      <a class="navbar-signout" href="/.auth/logout">Sign out</a>
       <button class="refresh-btn" id="refreshBtn" onclick="loadDashboard()">↺ Refresh</button>
     </div>
   </header>
