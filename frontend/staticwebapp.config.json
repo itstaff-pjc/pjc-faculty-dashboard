@@ -12,16 +12,16 @@
   },
   "routes": [
     {
+      "route": "/.auth/*",
+      "allowedRoles": ["anonymous"]
+    },
+    {
       "route": "/api/*",
-      "allowedRoles": [
-        "authenticated"
-      ]
+      "allowedRoles": ["authenticated"]
     },
     {
       "route": "/*",
-      "allowedRoles": [
-        "authenticated"
-      ]
+      "allowedRoles": ["authenticated"]
     }
   ],
   "responseOverrides": {
