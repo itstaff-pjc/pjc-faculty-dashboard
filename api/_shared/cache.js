@@ -29,4 +29,8 @@ function setCached(key, value, ttlSeconds) {
   _cache.set(key, { value, expiry: Date.now() + ttlSeconds * 1000 });
 }
 
-module.exports = { getToken, setToken, clearToken, getCached, setCached };
+function clearCached(key) {
+  _cache.delete(key);
+}
+
+module.exports = { getToken, setToken, clearToken, getCached, setCached, clearCached };

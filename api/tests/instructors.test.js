@@ -1,5 +1,8 @@
 jest.mock('../_shared/bb-client');
 const bbClient = require('../_shared/bb-client');
+const cache = require('../_shared/cache');
+
+afterEach(() => cache.clearCached('instructors'));
 
 function makeContext() {
   return { res: {}, log: jest.fn() };
