@@ -8,144 +8,147 @@
 
 ## Overview
 
-A "Designer View" tab on the Faculty Activity Dashboard giving Darrell Elliott (instructional designer) an at-a-glance picture of course health and a prioritized list of instructors to contact for support. Accessible to all dashboard users via a view toggle in the toolbar.
+Designer view is integrated directly into the existing Faculty Activity Dashboard rather than a separate tab. Two additions: a term countdown in the toolbar, and a "Flagged" filter pill that re-sorts the instructor list by most flagged courses and shows aggregate stat cards above the list. Clicking any instructor still opens their course detail on the right as normal.
 
 ---
 
-## Layout
+## Layout Changes (delta from existing)
 
 ```
-┌─────────────────────────────────────────────────┐
-│  WHITE MASTHEAD                                  │
-├─────────────────────────────────────────────────┤
-│  GREEN NAVBAR                                    │
-├─────────────────────────────────────────────────┤
-│  TOOLBAR: [Faculty] [Designer View]  sync status │
-├─────────────────────────────────────────────────┤
-│  DESIGNER PANEL (full width, scrollable)         │
-│                                                  │
-│  ┌──────────────────────────────────────────┐   │
-│  │  TERM BANNER (dark green)                │   │
-│  │  Current term + days remaining           │   │
-│  │  Upcoming terms + days until start       │   │
-│  └──────────────────────────────────────────┘   │
-│                                                  │
-│  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐           │
-│  │  12  │ │   8  │ │   6  │ │  43  │           │
-│  │ Zero │ │ No   │ │ No   │ │Total │           │
-│  │login │ │Asgmt │ │Cntnt │ │      │           │
-│  └──────┘ └──────┘ └──────┘ └──────┘           │
-│                                                  │
-│  ┌──────────────────────────────────────────┐   │
-│  │  PRIORITY CONTACT LIST (gold header)     │   │
-│  │  1. Miller, Paul  · 2 courses flagged    │   │
-│  │  2. Davis, Jennifer · 3 courses flagged  │   │
-│  │  ...                                     │   │
-│  └──────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│  WHITE MASTHEAD                                                  │
+├─────────────────────────────────────────────────────────────────┤
+│  GREEN NAVBAR — title                          [↺ Refresh]      │
+├─────────────────────────────────────────────────────────────────┤
+│  TOOLBAR                                                         │
+│  [All(8)] [Inactive(2)] [At Risk(2)] [Active(4)] [Flagged(5)]  │
+│                        Spring 2026: 48 days · Summer in 52 days │
+├──────────────────────────┬──────────────────────────────────────┤
+│  INSTRUCTOR LIST         │  COURSE DETAIL PANEL (unchanged)     │
+│                          │                                       │
+│  [when Flagged selected] │                                       │
+│  ┌──┐┌──┐┌──┐┌──┐       │                                       │
+│  │12││ 8││ 6││43│        │                                       │
+│  └──┘└──┘└──┘└──┘       │                                       │
+│  ─────────────────────   │                                       │
+│  1. Miller, Paul ●●      │                                       │
+│  2. Davis, Jennifer ●●●  │                                       │
+│  3. Jones, Michael ●     │                                       │
+└──────────────────────────┴──────────────────────────────────────┘
 ```
 
-When Designer View is active, the instructor list and detail panel are hidden. The filter pills are also hidden (not relevant in this view). Switching back to Faculty restores the normal layout.
+---
+
+## Term Countdown (toolbar)
+
+Added to the right side of the toolbar, replacing or sitting alongside the existing sync status text.
+
+- Format: `Spring 2026: 48 days · Summer in 52 days`
+- Shows current term name + days remaining, then first upcoming term name + days until start
+- If no upcoming term: shows only the current term countdown
+- Color: `var(--text-muted)`, 10px, same line as sync status
+- Data source: `currentTerms[0]` and `upcomingTerms[0]` from `/api/sync-status`
 
 ---
 
-## Term Banner
+## Flagged Filter Pill
 
-- **Background:** `#064429` (dark green), rounded corners
-- **Left section:** "Current Term" label + term name in white
-- **Center:** Days remaining as a large gold number (`#FFC72C`) with "days remaining" label
-- **Divider(s):** 1px `rgba(255,255,255,.15)` vertical rules
-- **Right sections:** Up to 2 upcoming terms (nearest first), each showing name + "starts in N days · MMM D"
-- **Data source:** `currentTerms` and `upcomingTerms` arrays from `/api/designer-summary`
-- If no upcoming terms: the upcoming sections are omitted
+Added as a fifth pill after "Active" in the toolbar filter row.
+
+- Label: `Flagged (N)` where N = count of instructors with `flaggedCourseCount > 0`
+- Unselected style: white background, `#064429` text, `#dde8e3` border (neutral — not a status color)
+- Selected style: same as other selected pills (`#064429` background, white text)
+- When selected:
+  - Instructor list shows only instructors with `flaggedCourseCount > 0`
+  - Sorted descending by `flaggedCourseCount`, then alphabetically
+  - Stat summary cards appear above the list (see below)
+- When deselected: normal list view resumes, stat cards hidden
 
 ---
 
-## Stat Cards
+## Stat Summary Cards (Flagged view only)
 
-Four cards in a row (2×2 on mobile):
+A row of 4 compact cards shown above the instructor list only when Flagged filter is active.
 
-| Card | Value | Color |
+| Card | Value | Text color |
 |---|---|---|
-| Courses · Zero Logins | Count of courses where `lastAccessed === null` | `#991b1b` (red) |
-| Courses · No Assignments | Count of courses where `assignmentCount === 0` | `#854d0e` (amber) |
-| Courses · No Content Update | Count of courses where `contentLastModified === null` | `#854d0e` (amber) |
-| Total Active Courses | Total course count across all active term instructors | `#064429` (green) |
+| Zero Logins | courses where `lastAccessed === null` | `#991b1b` |
+| No Assignments | courses where `assignmentCount === 0` | `#854d0e` |
+| No Content Update | courses where `contentLastModified === null` | `#854d0e` |
+| Total Courses | all courses across all instructors | `#064429` |
 
-Cards are white with `border: 1px #dde8e3`, `border-radius: 8px`, `box-shadow: 0 1px 3px rgba(0,0,0,.05)`. Value is 28px bold, label is 10px muted below.
+Style: white background, `border: 1px solid #dde8e3`, `border-radius: 6px`, compact padding. Value is bold 20px, label is 9px muted below. Cards sit in a 4-column grid above the instructor rows, inside the `inst-list` panel.
+
+These counts are computed from the `instructors` array already loaded in memory (no extra API call). Each instructor entry in `instructors.json` includes `flaggedCourseCount` and `flags`; individual course data is not needed for the counts since they are pre-computed into `courseStats` in `/api/sync-status`.
 
 ---
 
-## Priority Contact List
+## Instructor Row (Flagged view)
 
-**Header:** Gold (`#FFC72C`) background, green text. Shows "N instructors flagged · sorted by most issues".
+Each row in the Flagged view shows the same layout as normal, plus flag pills below the name:
 
-**Ranking:** Instructors sorted descending by `flaggedCourseCount` (number of their courses that have at least one flag). Ties broken alphabetically.
+```
+┌──────────────────────────────────────────────────┐
+│ Miller, Paul              [Inactive badge]        │
+│ 2 courses · 18 days inactive · 0 assignments     │  ← flag summary line
+└──────────────────────────────────────────────────┘
+```
 
-**A course is flagged if it has any of:**
-- `lastAccessed === null` (zero logins)
-- `assignmentCount === 0` (no assignments)
-- `contentLastModified === null` (no content update)
-
-**Each row shows:**
-- Rank number (circle, red for inactive, amber for at-risk)
-- Instructor name (bold) + "N courses flagged" (muted)
-- Reason pills: human-readable flags e.g. "Never logged in", "0 assignments (2 courses)", "8 days inactive (1 course)"
-- Status badge (Inactive / At Risk / Active) on the right
-
-**Only instructors with at least one flagged course appear** in the list.
+The flag summary line is a single muted text line (10px, `var(--text-muted)`) listing the instructor's flags joined with `·`. Shown only in Flagged view, hidden in all other filter views.
 
 ---
 
 ## Data Architecture
 
-### New blob: `designer-summary.json`
-
-Written by the nightly sync. Structure:
+### `instructors.json` — two new fields per instructor
 
 ```json
 {
-  "computedAt": "2026-03-28T05:00:00.000Z",
+  "userId": "pmiller",
+  "name": "Miller, Paul",
+  "status": "inactive",
+  "courseCount": 2,
+  "flaggedCourseCount": 2,
+  "flags": ["18 days inactive", "0 assignments"]
+}
+```
+
+`flaggedCourseCount` = number of the instructor's courses with any flag.
+`flags` = human-readable string array, deduplicated and grouped (e.g. "0 assignments (2 courses)").
+
+**A course is flagged if any of:**
+1. `status === 'inactive'` → "N days inactive" (or "Never logged in" if `lastAccessed === null`)
+2. `assignmentCount === 0` → "0 assignments"
+3. `contentLastModified === null` → "No content update"
+
+### `meta.json` — four new fields
+
+```json
+{
+  "lastSync": "...",
+  "status": "ok",
+  "instructorCount": 200,
+  "termCount": 1,
   "currentTerms": [
     { "name": "Spring 2026", "endDate": "2026-05-15T00:00:00Z", "daysRemaining": 48 }
   ],
   "upcomingTerms": [
-    { "name": "Summer 2026", "startDate": "2026-06-02T00:00:00Z", "daysUntilStart": 52 },
-    { "name": "Fall 2026",   "startDate": "2026-08-25T00:00:00Z", "daysUntilStart": 142 }
+    { "name": "Summer 2026", "startDate": "2026-06-02T00:00:00Z", "daysUntilStart": 52 }
   ],
   "courseStats": {
     "total": 850,
     "zeroLogins": 120,
     "noAssignments": 80,
     "noContentUpdate": 60
-  },
-  "priorityContacts": [
-    {
-      "userId": "pmiller",
-      "name": "Miller, Paul",
-      "status": "inactive",
-      "flaggedCourseCount": 2,
-      "flags": ["Never logged in", "0 assignments (2 courses)"]
-    }
-  ]
+  }
 }
 ```
 
-### New sync function: `getUpcomingTerms(allTerms)`
+`/api/sync-status` already reads and returns `meta.json` — no endpoint changes needed. The frontend reads these new fields from the existing sync-status response.
 
-Filters the already-fetched terms list (passed in from `getActiveTerms`'s fetch) for terms where `startDate > now` and `availability.available === 'Yes'` and start year >= `BB_START_YEAR`. Sorted ascending by startDate. Returns up to 2. **No additional Blackboard API calls.**
+### `getUpcomingTerms(allTerms, startYear)`
 
-### New sync function: `buildDesignerSummary(allCourses, instructorMap, activeTerms, upcomingTerms)`
-
-Computes all fields above from in-memory data already fetched during the sync run. No additional Blackboard API calls.
-
-### New API endpoint: `GET /api/designer-summary`
-
-- Reads `designer-summary.json` from blob storage
-- Returns `200` with the blob contents
-- Returns `503 { error: 'No sync data available. The nightly sync has not run yet.' }` if blob not found
-- Returns `500 { error: 'Failed to load designer summary' }` on other errors
-- 60-second in-memory cache (same pattern as sync-status)
+Pure function — filters the already-fetched `allTerms` array for terms where `startDate > now` and `availability.available === 'Yes'` and year >= startYear. Returns up to 2, sorted ascending by startDate. **Zero additional Blackboard API calls.**
 
 ---
 
@@ -153,46 +156,26 @@ Computes all fields above from in-memory data already fetched during the sync ru
 
 | File | Change |
 |---|---|
-| `api-sync/sync/index.js` | Add `getUpcomingTerms()`, `buildDesignerSummary()`, write `designer-summary.json` at end of sync |
-| `api/designer-summary/index.js` | New: reads `designer-summary.json` blob, returns it |
-| `api/designer-summary/function.json` | New: function binding config |
-| `frontend/index.html` | Add view toggle buttons (Faculty / Designer View) to toolbar; add `#designerPanel` div |
-| `frontend/app.js` | Add `loadDesignerView()`, `renderDesignerView()`, `setView()` functions |
-| `frontend/styles.css` | Add `.view-toggle`, `.designer-panel`, `.term-banner`, `.stat-cards`, `.priority-list` styles |
+| `api-sync/sync/index.js` | Add `getUpcomingTerms()`, `computeFlags()`, `buildCourseStats()`. Write `flaggedCourseCount` + `flags` into each instructor summary. Write `currentTerms`, `upcomingTerms`, `courseStats` into `meta.json`. |
+| `api-sync/tests/sync.test.js` | Add assertions for new fields on instructor summaries and meta.json |
+| `frontend/app.js` | Handle `flagged` filter: sort by `flaggedCourseCount`, render stat cards, render flag summary line per row. Read term countdown from sync-status response and render in toolbar. |
+| `frontend/styles.css` | Add `.stat-summary`, `.stat-summary-card`, `.inst-flag-line` styles |
+| `frontend/index.html` | Add term countdown `<span id="termCountdown">` to toolbar |
+
+No new API endpoints. No new blobs.
 
 ---
 
 ## Mobile Behavior
 
+- Term countdown: wraps to second line in toolbar if needed, or truncates to just `48 days left`
 - Stat cards: 2×2 grid at ≤768px
-- Term banner: stacks vertically (current term on top, upcoming below)
-- Priority list: full width, scrollable
-- View toggle buttons: remain visible in toolbar
-
----
-
-## Flag Logic (definitive)
-
-A course is flagged if **any** of these are true:
-1. `status === 'inactive'` → pill: "Never logged in" (if lastAccessed null) or "N days inactive"
-2. `assignmentCount === 0` → pill: "0 assignments"
-3. `contentLastModified === null` → pill: "No content update"
-
-**`flaggedCourseCount`** = number of the instructor's courses matching any condition above.
-
-**Stat card definitions** (independent of flagging):
-- `zeroLogins` = courses where `lastAccessed === null`
-- `noAssignments` = courses where `assignmentCount === 0`
-- `noContentUpdate` = courses where `contentLastModified === null`
-- `total` = all courses across all active-term instructors
-
-Flags of the same type are grouped in the display pill (e.g., "0 assignments (2 courses)").
+- Flag summary line: visible in instructor rows as normal
 
 ---
 
 ## Out of Scope
 
-- Clicking an instructor in the contact list does not navigate to their detail (future enhancement)
-- No email/contact button
-- No per-term breakdown of stats (all active terms combined)
-- No date filter or manual refresh of designer data independent of the main Refresh button
+- Filtering stat cards by term
+- Clicking a stat card to filter by that flag type
+- Email / contact button on instructor rows
