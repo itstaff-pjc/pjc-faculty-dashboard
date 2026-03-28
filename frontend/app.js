@@ -13,7 +13,12 @@ async function loadDashboard() {
 
   try {
     const res = await fetch('/api/instructors');
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) {
+      let msg = `Error ${res.status}`;
+      try { msg = (await res.json()).error || msg; } catch { /* ignore */ }
+      setInstList(`<div class="error-msg">${escHtml(msg)}</div>`);
+      return;
+    }
     const { instructors } = await res.json();
     allInstructors = instructors;
     updateFilterCounts();
@@ -21,7 +26,7 @@ async function loadDashboard() {
     document.getElementById('lastRefreshed').textContent =
       'Last refreshed: ' + new Date().toLocaleTimeString();
   } catch (err) {
-    setInstList(`<div class="error-msg">Failed to load data: ${escHtml(err.message)}</div>`);
+    setInstList(`<div class="error-msg">Failed to load data. Check your connection and try again.</div>`);
   } finally {
     btn.disabled = false;
     btn.textContent = '↺ Refresh';
