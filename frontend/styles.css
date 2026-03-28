@@ -207,3 +207,32 @@ body {
   border-radius: 6px; padding: 12px 16px; font-size: 13px; margin: 16px;
 }
 
+/* ── Mobile (≤768px) ── */
+@media (max-width: 768px) {
+  body { overflow: auto; height: auto; }
+
+  /* Masthead: center logo, hide user info */
+  .masthead { padding: 10px 16px; justify-content: center; }
+  .masthead-right { display: none; }
+
+  /* Navbar: compact, show mobile-only controls */
+  .navbar { padding: 0 14px; height: 46px; gap: 8px; }
+  .navbar-meta { display: none; }
+  .back-btn { display: flex; }
+  .navbar-signout { display: block; }
+
+  /* Filter toolbar: allow pills to wrap */
+  .toolbar { padding: 8px 14px; flex-wrap: wrap; }
+
+  /* Single column layout */
+  .main { grid-template-columns: 1fr; }
+  .inst-list { border-right: none; height: auto; }
+
+  /* Drill-down: detail hidden until instructor tapped */
+  .detail { display: none; }
+  body.detail-open .inst-list { display: none; }
+  body.detail-open .detail { display: flex; }
+
+  /* Detail panel fills screen when open */
+  body.detail-open .main { height: calc(100vh - 130px); }
+}
