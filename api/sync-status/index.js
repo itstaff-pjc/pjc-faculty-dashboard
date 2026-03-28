@@ -3,7 +3,7 @@ const { getCached, setCached } = require('../_shared/cache');
 
 const CACHE_TTL_SECONDS = 60;
 
-module.exports = async function (context, req) {
+module.exports = async function (context, _req) {
   try {
     const cached = getCached('sync-status');
     if (cached) {
