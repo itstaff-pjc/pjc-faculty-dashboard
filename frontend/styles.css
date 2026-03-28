@@ -156,3 +156,34 @@ body {
   background: var(--inactive-bg); border: 1px solid #fca5a5; color: var(--inactive-text);
   border-radius: 6px; padding: 12px 16px; font-size: 13px; margin: 16px;
 }
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.user-info {
+  color: rgba(255,255,255,0.85);
+  font-size: 0.85rem;
+}
+
+.logout-link {
+  color: #F0B429;
+  font-size: 0.85rem;
+  text-decoration: none;
+  border: 1px solid #F0B429;
+  padding: 3px 10px;
+  border-radius: 4px;
+}
+
+.logout-link:hover {
+  background: rgba(240,180,41,0.15);
+}
+
+.sync-status {
+  font-size: 0.8rem;
+  color: #666;
+  margin-right: 12px;
+}

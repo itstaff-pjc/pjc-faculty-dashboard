@@ -46,6 +46,39 @@ async function loadDetail(userId) {
   }
 }
 
+async function loadUserInfo() {
+  try {
+    const res = await fetch('/.auth/me');
+    if (!res.ok) return;
+    const { clientPrincipal } = await res.json();
+    if (clientPrincipal) {
+      document.getElementById('userInfo').textContent =
+        clientPrincipal.userDetails || clientPrincipal.userId;
+    }
+  } catch {
+    // user info is cosmetic — silently ignore
+  }
+}
+
+async function loadSyncStatus() {
+  try {
+    const res = await fetch('/api/sync-status');
+    if (!res.ok) return;
+    const meta = await res.json();
+    const el = document.getElementById('syncStatus');
+    if (!meta.lastSync) {
+      el.textContent = 'No sync data yet';
+      return;
+    }
+    const days = Math.floor((Date.now() - new Date(meta.lastSync).getTime()) / 86400000);
+    const when = days === 0 ? 'today' : days === 1 ? 'yesterday' : `${days} days ago`;
+    const errFlag = meta.status === 'error' ? ' ⚠ sync error' : '';
+    el.textContent = `Data synced: ${when}${errFlag}`;
+  } catch {
+    // sync status is cosmetic — silently ignore
+  }
+}
+
 // ── Filter ────────────────────────────────────────────────────────────────────
 
 function setFilter(filter) {
@@ -188,3 +221,5 @@ function relDate(iso) {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 loadDashboard();
+loadUserInfo();
+loadSyncStatus();
