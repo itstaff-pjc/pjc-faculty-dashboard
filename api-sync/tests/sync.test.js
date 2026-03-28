@@ -35,8 +35,6 @@ test('writes instructors.json, one instructor blob, and meta.json with ok status
     if (path.includes('courses?termId')) return COURSES;
     if (path.includes('/users?role')) return MEMBERS;
     if (path.includes('/gradebook/columns')) return [{ id: '_50_1' }];
-    if (/\/forums\/_/.test(path)) return [];
-    if (path.includes('/forums')) return [];
     if (path.includes('/contents')) return [];
     return [];
   });

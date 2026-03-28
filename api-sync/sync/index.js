@@ -40,30 +40,13 @@ async function getContentLastModified(courseId) {
   }
 }
 
-async function getDiscussionPostCount(courseId, userId) {
-  try {
-    const forums = await bbFetchAll(`/learn/api/public/v1/courses/${courseId}/forums?limit=100`);
-    let count = 0;
-    for (const forum of forums) {
-      const posts = await bbFetchAll(
-        `/learn/api/public/v1/courses/${courseId}/forums/${forum.id}/threads?limit=100`
-      );
-      count += posts.filter(p => p.author?.id === userId).length;
-    }
-    return count;
-  } catch {
-    return 0;
-  }
-}
-
 async function buildInstructorDetail(userId, instructorCourses) {
   const courses = await Promise.all(
     instructorCourses.map(async ({ course, membership }) => {
-      const [timeSpent, contentLastModified, gradeColumns, discussionPosts] = await Promise.all([
+      const [timeSpent, contentLastModified, gradeColumns] = await Promise.all([
         getTimeSpent(course.id, userId),
         getContentLastModified(course.id),
         bbFetchAll(`/learn/api/public/v1/courses/${course.id}/gradebook/columns?limit=100`).catch(() => []),
-        getDiscussionPostCount(course.id, userId),
       ]);
       return {
         courseId: course.id,
@@ -75,7 +58,6 @@ async function buildInstructorDetail(userId, instructorCourses) {
         contentLastModified,
         gradeColumnsCount: gradeColumns.length,
         gradesPosted: gradeColumns.length > 0 ? 'Yes' : 'None',
-        instructorDiscussionPosts: discussionPosts,
       };
     })
   );

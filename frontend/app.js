@@ -203,10 +203,6 @@ function renderDetail(inst, courses) {
             </div>
             <div class="stat-row">
               <div class="stat">
-                <div class="stat-label">Discussion Posts</div>
-                <div class="stat-value">${c.instructorDiscussionPosts}</div>
-              </div>
-              <div class="stat">
                 <div class="stat-label">Grade Columns</div>
                 <div class="stat-value">${c.gradeColumnsCount}</div>
               </div>
