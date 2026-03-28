@@ -158,7 +158,7 @@ body {
   background: var(--gold); color: var(--green);
   padding: 10px 20px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: space-between;
-  border-bottom: 2px solid #d4a020;
+  border-bottom: 2px solid var(--gold-dark);
 }
 .detail-header h2 { font-size: 15px; font-weight: 700; }
 .detail-header span { font-size: 12px; }
