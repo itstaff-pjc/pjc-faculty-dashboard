@@ -118,7 +118,10 @@ body {
 .filter-pill[data-filter="at-risk"].on  { background: #ca8a04; color: white; }
 .filter-pill[data-filter="active"]   { background: var(--active-bg); color: var(--active-text); border-color: #86efac; }
 .filter-pill[data-filter="active"].on   { background: #16a34a; color: white; }
+.filter-pill[data-filter="flagged"] { background: white; color: var(--green); border-color: var(--border); }
+.filter-pill[data-filter="flagged"].on { background: var(--green); color: white; }
 .toolbar-right { margin-left: auto; font-size: 11px; color: var(--text-muted); }
+#termCountdown { font-size: 10px; color: var(--text-muted); margin-left: 8px; }
 
 /* ── Split layout ── */
 .main {
@@ -145,6 +148,38 @@ body {
 .inst-name { flex: 1; }
 .inst-name strong { display: block; font-size: 13px; color: var(--green); }
 .inst-name span { display: block; font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+.inst-flag-line {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.stat-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 10px 12px;
+  background: white;
+  border-bottom: 2px solid var(--border);
+}
+.stat-summary-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px;
+  text-align: center;
+}
+.stat-summary-value {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+}
+.stat-summary-label {
+  font-size: 9px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
 
 /* ── Badges ── */
 .badge { padding: 2px 9px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
@@ -236,4 +271,6 @@ body {
 
   /* Detail panel fills screen when open */
   body.detail-open .main { height: calc(100vh - 130px); }
+
+  .stat-summary { grid-template-columns: repeat(2, 1fr); }
 }
