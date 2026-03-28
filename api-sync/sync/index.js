@@ -32,6 +32,58 @@ function splitTerms(allTerms) {
   return { currentTerms, upcomingTerms };
 }
 
+function computeFlags(courses) {
+  const flagged = courses.filter(c =>
+    c.status === 'inactive' ||
+    c.assignmentCount === 0 ||
+    c.contentLastModified === null
+  );
+
+  const flags = [];
+
+  const neverLogged = courses.filter(c => c.lastAccessed === null && c.status === 'inactive');
+  const inactive = courses.filter(c => c.status === 'inactive' && c.lastAccessed !== null);
+
+  if (neverLogged.length) {
+    flags.push(neverLogged.length > 1
+      ? `Never logged in (${neverLogged.length} courses)` : 'Never logged in');
+  }
+  if (inactive.length) {
+    const days = Math.max(...inactive.map(c =>
+      Math.floor((Date.now() - new Date(c.lastAccessed).getTime()) / 86400000)
+    ));
+    flags.push(inactive.length > 1
+      ? `${days} days inactive (${inactive.length} courses)` : `${days} days inactive`);
+  }
+
+  const noAssign = courses.filter(c => c.assignmentCount === 0);
+  if (noAssign.length) {
+    flags.push(noAssign.length > 1
+      ? `0 assignments (${noAssign.length} courses)` : '0 assignments');
+  }
+
+  const noContent = courses.filter(c => c.contentLastModified === null);
+  if (noContent.length) {
+    flags.push(noContent.length > 1
+      ? `No content update (${noContent.length} courses)` : 'No content update');
+  }
+
+  return { flaggedCourseCount: flagged.length, flags };
+}
+
+function buildCourseStats(instructorDetails) {
+  let total = 0, zeroLogins = 0, noAssignments = 0, noContentUpdate = 0;
+  for (const { courses } of instructorDetails) {
+    for (const c of courses) {
+      total++;
+      if (c.lastAccessed === null) zeroLogins++;
+      if (c.assignmentCount === 0) noAssignments++;
+      if (c.contentLastModified === null) noContentUpdate++;
+    }
+  }
+  return { total, zeroLogins, noAssignments, noContentUpdate };
+}
+
 async function getTimeSpent(courseId, userId) {
   try {
     const data = await bbFetch(`/learn/api/public/v1/courses/${courseId}/statistics/user/${userId}`);
@@ -121,9 +173,18 @@ module.exports = async function (context, myTimer) {
       }
     }
 
-    // Build and write instructors summary
+    // Build all instructor details in memory first (needed for flag computation)
+    const allDetails = new Map();
+    for (const [userId, data] of map.entries()) {
+      const detail = await buildInstructorDetail(userId, data.courses);
+      allDetails.set(userId, detail);
+    }
+
+    // Build instructor summaries with flags
     const instructorSummaries = [];
     for (const [userId, data] of map.entries()) {
+      const detail = allDetails.get(userId);
+      const { flaggedCourseCount, flags } = computeFlags(detail.courses);
       const courseStatuses = data.courses.map(({ membership }) =>
         computeStatus(membership.lastAccessed || null)
       );
@@ -132,6 +193,8 @@ module.exports = async function (context, myTimer) {
         name: data.name,
         courseCount: data.courses.length,
         status: worstStatus(courseStatuses),
+        flaggedCourseCount,
+        flags,
       });
     }
     instructorSummaries.sort((a, b) =>
@@ -142,13 +205,15 @@ module.exports = async function (context, myTimer) {
     context.log(`Wrote instructors.json: ${instructorSummaries.length} instructors`);
 
     // Write per-instructor detail blobs
-    for (const [userId, data] of map.entries()) {
-      const detail = await buildInstructorDetail(userId, data.courses);
+    for (const [userId, detail] of allDetails.entries()) {
       await writeBlob(`instructor/${userId}.json`, detail);
     }
-    context.log(`Wrote ${map.size} instructor detail blobs`);
+    context.log(`Wrote ${allDetails.size} instructor detail blobs`);
 
-    // Write success meta
+    // Compute course stats across all details
+    const courseStats = buildCourseStats([...allDetails.values()]);
+
+    // Write meta with term data and course stats
     const now = Date.now();
     await writeBlob('meta.json', {
       lastSync: new Date().toISOString(),
@@ -168,6 +233,7 @@ module.exports = async function (context, myTimer) {
         startDate: t.startDate,
         daysUntilStart: Math.ceil((new Date(t.startDate).getTime() - now) / 86400000),
       })),
+      courseStats,
     });
     context.log('Sync complete');
 
