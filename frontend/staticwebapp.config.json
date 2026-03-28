@@ -13,11 +13,15 @@
   "routes": [
     {
       "route": "/api/*",
-      "allowedRoles": ["authenticated"]
+      "allowedRoles": [
+        "authenticated"
+      ]
     },
     {
       "route": "/*",
-      "allowedRoles": ["authenticated"]
+      "allowedRoles": [
+        "authenticated"
+      ]
     }
   ],
   "responseOverrides": {
@@ -27,8 +31,11 @@
     }
   },
   "navigationFallback": {
-    "rewrite": "/frontend/index.html",
-    "exclude": ["/api/*", "/*.{css,js,jpg,png,ico}"]
+    "rewrite": "/index.html",
+    "exclude": [
+      "/api/*",
+      "/*.{css,js,jpg,png,ico}"
+    ]
   },
   "mimeTypes": {
     ".json": "application/json"
